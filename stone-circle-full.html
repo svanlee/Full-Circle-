@@ -1,0 +1,1050 @@
+<title>Stone Circle Full Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the 1.2 m yantra panel is the hero; beside it (below on phones) the selected-stone inspector with its twist dial, the stone tray, and the theremin podium. */
+:root {
+  --bg: #e6e9e4; --surface: #f4f5f1; --fg: #1d2220; --muted: #5d6662; --line: #c9cec8;
+  --accent: #1e6a64; --accent-fg: #ffffff;
+  --birch: #e9d2a6; --birch-edge: #c9a874; --burn: #7a4220; --floor: #d9bd8a;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #141719; --surface: #1d2124; --fg: #e8ebe7; --muted: #9aa49f; --line: #2e3437; --accent: #5fc2b8; --accent-fg: #0d1615; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #141719; --surface: #1d2124; --fg: #e8ebe7; --muted: #9aa49f; --line: #2e3437; --accent: #5fc2b8; --accent-fg: #0d1615; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--display); font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.app { max-width: 1240px; margin: 0 auto; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 980px) { .app { grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); align-items: start; } header, .top { grid-column: 1 / -1; } }
+.app > * { min-width: 0; }
+header { display: grid; gap: 4px; }
+h1 { font-size: clamp(26px, 4.5vw, 38px); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.sub { margin: 0; color: var(--muted); max-width: 70ch; line-height: 1.45; }
+h2 { font-size: 16px; margin: 0; }
+.stage { display: grid; gap: 12px; }
+svg.board { width: 100%; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; filter: drop-shadow(0 6px 16px rgba(0,0,0,.2)); }
+.well { cursor: pointer; outline: none; }
+.well:focus-visible .rim { stroke: var(--accent); stroke-width: 3; }
+.well.sel .rim { stroke: var(--accent); stroke-width: 3.5; stroke-dasharray: 5 4; }
+.well.hit .rim { stroke: #fff6d8; stroke-width: 4; }
+.engr { font-family: var(--mono); font-size: 11px; fill: var(--burn); text-anchor: middle; letter-spacing: .1em; }
+.val { font-family: var(--mono); font-size: 11px; font-weight: 500; text-anchor: middle; fill: #fff; stroke: #1b1b1b; stroke-width: 2.4px; paint-order: stroke; pointer-events: none; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font: 500 14px var(--display); border-radius: 999px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+button:focus-visible, input:focus-visible, .tray-stone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); min-width: 92px; }
+button:disabled { opacity: .45; cursor: default; }
+.tempo { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+.tempo input { width: 120px; accent-color: var(--accent); }
+.status { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--mono); font-size: 12.5px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.chip b { font-weight: 500; color: var(--accent); }
+
+.side { display: grid; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.insp { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 14px; align-items: center; }
+.insp svg { width: 132px; height: 132px; touch-action: none; cursor: grab; }
+.insp .big { font-size: 22px; font-weight: 700; line-height: 1.15; }
+.insp p { margin: 0; color: var(--muted); line-height: 1.4; font-size: 14px; }
+.twistrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.twistrow button { padding: 7px 12px; }
+
+.tray { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.tray-stone { display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.tray-stone[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.tray-stone svg { width: 44px; height: 38px; }
+.tray-stone .name { font-weight: 700; font-size: 13px; }
+.tray-stone .role { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: center; line-height: 1.3; }
+
+.pad { position: relative; height: 170px; border-radius: 12px; border: 1px solid var(--line); touch-action: none; cursor: crosshair; overflow: hidden;
+  background: linear-gradient(0deg, transparent, color-mix(in srgb, var(--accent) 14%, transparent)), repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--line) calc(10% - 1px) 10%); }
+.pad .hand { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); pointer-events: none; }
+.pad .readout { position: absolute; left: 10px; top: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); pointer-events: none; }
+.pad .axis { position: absolute; right: 10px; bottom: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); pointer-events: none; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.hint { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.ghost { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 20; width: 44px; height: 38px; margin: -19px 0 0 -22px; }
+.board-wrap { position: relative; }
+#laser { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.board-wrap.night svg.board { --birch: #2a2420; --birch-edge: #15110e; --floor: #1b1714; --burn: #6c5543; }
+.layers { display: flex; flex-wrap: wrap; gap: 8px; }
+.tog { display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; background: var(--surface); cursor: pointer; }
+.tog input { accent-color: var(--accent); margin: 0; }
+.top { display: grid; gap: 12px; }
+.screen-wrap { position: relative; border-radius: 14px; overflow: hidden; background: #04050a; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.screen { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 72vh; display: block; background: #04050a; }
+.screen-wrap:fullscreen .screen { max-height: none; height: 100%; aspect-ratio: auto; }
+.fs { position: absolute; right: 10px; top: 10px; padding: 6px 12px; font-size: 12.5px; background: rgba(0,0,0,.45); color: #fff; border-color: rgba(255,255,255,.25); }
+.cues { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-family: var(--mono); font-size: 12px; min-height: 9.5em; align-content: start; }
+.cues li { display: flex; gap: 8px; white-space: nowrap; overflow: hidden; min-width: 0; }
+.cues .addr { color: var(--accent); flex: none; }
+.cues .args { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.pad.lit { box-shadow: 0 0 0 2px var(--accent), 0 0 28px color-mix(in srgb, var(--accent) 60%, transparent); }
+@media (max-width: 420px) { .tray .role { display: none; } .insp { grid-template-columns: 110px minmax(0, 1fr); } .insp svg { width: 110px; height: 110px; } }
+@media (prefers-reduced-motion: reduce) { .playhead { display: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Stone Circle</h1>
+    <p class="sub">The full 35-well yantra, with a 3D Hall sensor under every well so each stone reads its type and how far it's turned. Place stones, select one to twist it, and play the theremin podium over the top.</p>
+  </header>
+
+  <section class="top">
+    <div class="bar">
+      <button class="primary" id="play" type="button">Play</button>
+      <button id="example" type="button">Example</button>
+      <button id="clear" type="button">Clear</button>
+      <label class="tempo" for="bpm">Tempo <input id="bpm" type="range" min="70" max="150" value="100"> <span id="bpmv">100</span></label>
+    </div>
+    <div class="screen-wrap" id="screenWrap">
+      <canvas class="screen" id="screen" aria-label="Projection screen: live visuals driven by the stones and the mix"></canvas>
+      <button class="fs" id="fs" type="button" aria-label="Show the display full screen">Full screen</button>
+    </div>
+  </section>
+
+  <section class="stage">
+    <div class="board-wrap night" id="boardWrap">
+      <svg class="board" id="board" viewBox="0 0 820 820" role="group" aria-label="Stone Circle yantra panel"></svg>
+      <canvas id="laser" aria-hidden="true"></canvas>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="layers" role="group" aria-label="Show layers">
+      <label class="tog" for="tNight"><input id="tNight" type="checkbox" checked> Night</label>
+      <label class="tog" for="tLights"><input id="tLights" type="checkbox" checked> Lights</label>
+      <label class="tog" for="tLasers"><input id="tLasers" type="checkbox" checked> Lasers</label>
+      <label class="tog" for="tDisplay"><input id="tDisplay" type="checkbox" checked> Display</label>
+    </div>
+    <div class="card">
+      <h2>Stones</h2>
+      <div class="tray" id="tray" role="group" aria-label="Stone types"></div>
+      <p class="hint">Tap a stone, then tap an empty well. Or drag it in. Drag a placed stone to move it, or off the panel to remove it. Scroll over a stone to turn it.</p>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="card" id="inspector">
+      <div class="eyebrow" id="iRole">Selected well</div>
+      <div class="insp">
+        <svg id="dial" viewBox="-70 -70 140 140" aria-label="Twist dial"></svg>
+        <div style="display:grid;gap:8px;min-width:0">
+          <div class="big" id="iTitle">—</div>
+          <p id="iBody"></p>
+          <div class="twistrow">
+            <button id="ccw" type="button" aria-label="Turn counter-clockwise one notch">↺ Turn</button>
+            <button id="cw" type="button" aria-label="Turn clockwise one notch">Turn ↻</button>
+            <button id="remove" type="button">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h2>Theremin podium</h2>
+        <label class="check" for="snap"><input id="snap" type="checkbox" checked> Snap to key</label>
+      </div>
+      <div class="pad" id="pad" aria-label="Theremin pad">
+        <span class="readout" id="tRead">Hold here to play</span>
+        <span class="axis">← pitch → · ↑ louder</span>
+        <div class="hand" id="hand" hidden></div>
+      </div>
+      <p class="hint">On the podium your right hand's height sets pitch and your left hand's sets volume. Here, left–right is pitch across 10 notes of the key and up–down is volume.</p>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h2>Cues sent</h2><span class="eyebrow">OSC to TouchDesigner</span>
+      </div>
+      <ul class="cues" id="cues"><li><span class="args">Press Play to see the hub's cues.</span></li></ul>
+      <p class="hint">The same addresses the hub sends, so the show you build in TouchDesigner reacts the same way. Step ticks (/step) aren't listed.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  // ================= rules (from the hub config) =================
+  const STONES = {
+    basalt: { name: "Basalt", drum: "kick", mel: "sub", key: "phrygian" },
+    slate:  { name: "Slate",  drum: "snare", mel: "pluck", key: "dorian" },
+    quartz: { name: "Quartz", drum: "hat", mel: "bell", key: "majpent" },
+    river:  { name: "River",  drum: "tom", mel: "bass", key: "minpent" },
+    twin:   { name: "Twin",   drum: "clap", mel: "choir", key: "whole" },
+  };
+  const TYPES = Object.keys(STONES);
+  const MODES = {
+    minpent: { name: "minor pentatonic", s: [0, 3, 5, 7, 10] }, majpent: { name: "major pentatonic", s: [0, 2, 4, 7, 9] },
+    dorian: { name: "dorian", s: [0, 2, 3, 5, 7, 9, 10] }, phrygian: { name: "phrygian", s: [0, 1, 3, 5, 7, 8, 10] },
+    whole: { name: "whole tone", s: [0, 2, 4, 6, 8, 10] },
+  };
+  const FX = ["filter", "delay", "reverb", "distortion", "octave", "stutter"];
+  const GATES = ["intro", "build", "drop", "breakdown"];
+  const ROOT = 50;                                  // D3
+  const NOTCH = { drum: 24, melody: 45, fx: 15, key: 30, gate: 12 };
+  const NN = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+  const noteName = n => NN[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1);
+  const signed = a => ((a % 360) + 540) % 360 - 180;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // twist → value, for each kind of well
+  const drumTune = a => clamp(Math.round(signed(a) / 24), -7, 7);
+  const melDegree = a => Math.round(((a % 360) + 360) % 360 / 45) % 8;
+  const fxAmount = a => (((a % 360) + 360) % 360) / 360;
+  const keyRoot = a => Math.round(((a % 360) + 360) % 360 / 30) % 12;
+  const gateBpm = a => clamp(Math.round(signed(a) / 12), -15, 15);
+
+  // ================= geometry =================
+  const CX = 410, CY = 410;
+  const polar = (r, deg) => [CX + r * Math.sin(deg * Math.PI / 180), CY - r * Math.cos(deg * Math.PI / 180)];
+  const WELLS = [];
+  for (let s = 0; s < 16; s++) WELLS.push({ role: "drum", step: s, deg: s * 22.5, p: polar(285, s * 22.5), r: 27 });
+  for (let k = 0; k < 8; k++) WELLS.push({ role: "melody", k, step: 2 * k, deg: 22.5 + 45 * k, p: polar(195, 22.5 + 45 * k), r: 29 });
+  FX.forEach((fx, i) => WELLS.push({ role: "fx", fx, deg: i * 60, p: polar(130, i * 60), r: 27 }));
+  WELLS.push({ role: "key", deg: 0, p: [CX, CY], r: 32 });
+  GATES.forEach((g, i) => WELLS.push({ role: "gate", gate: g, deg: i * 90, p: polar(372, i * 90), r: 28 }));
+  const KEYW = WELLS.findIndex(w => w.role === "key");
+  const MELW = WELLS.map((w, i) => w.role === "melody" ? i : -1).filter(i => i >= 0);
+
+  const state = new Array(WELLS.length).fill(null);   // {type, angle}
+  let gateOrder = [];
+  let selWell = null, selType = "basalt";
+  const DEFAULT_ANGLE = { drum: 0, melody: 0, fx: 120, key: 0, gate: 0 };
+
+  function activeGate() {
+    for (let j = gateOrder.length - 1; j >= 0; j--) if (state[gateOrder[j]]) return gateOrder[j];
+    return null;
+  }
+  const section = () => { const g = activeGate(); return g === null ? null : WELLS[g].gate; };
+  const keyInfo = () => {
+    const s = state[KEYW];
+    const mode = s ? STONES[s.type].key : "minpent";
+    const root = s ? keyRoot(s.angle) : 0;
+    return { mode, root, scale: MODES[mode].s };
+  };
+  const scaleNote = (deg, k = keyInfo()) => ROOT + k.root + k.scale[((deg % k.scale.length) + k.scale.length) % k.scale.length] + 12 * Math.floor(deg / k.scale.length);
+  const melNote = st => 12 + scaleNote(melDegree(st.angle));
+  const fxOn = name => { const i = WELLS.findIndex(w => w.fx === name); return state[i] ? fxAmount(state[i].angle) : 0; };
+  const bpm = () => +bpmIn.value + (activeGate() !== null ? gateBpm(state[activeGate()].angle) : 0);
+
+  function describe(i) {
+    const w = WELLS[i], st = state[i];
+    const stn = st ? STONES[st.type] : null;
+    switch (w.role) {
+      case "drum": return { role: `Drum well · step ${w.step + 1}`, title: st ? `${stn.name} → ${stn.drum}` : "Empty drum well",
+        body: st ? `Twist tunes it: ${fmtSemi(drumTune(st.angle))}.` : "A stone here fires on this step. Its type picks the drum.", val: st ? fmtSemi(drumTune(st.angle), true) : "" };
+      case "melody": return { role: `Melody well ${w.k + 1} · plays on step ${w.step + 1}`, title: st ? `${stn.name} → ${stn.mel}` : "Empty melody well",
+        body: st ? `Twist picks the note: ${noteName(melNote(st))}, degree ${melDegree(st.angle) + 1} of ${MODES[keyInfo().mode].name}.` : "Stone type picks the instrument; twist picks the note.", val: st ? noteName(melNote(st)) : "" };
+      case "fx": return { role: `Star point · ${w.fx}`, title: st ? `${cap(w.fx)} on` : `${cap(w.fx)} off`,
+        body: st ? `Applies to the whole mix. Twist sets the amount: ${Math.round(fxAmount(st.angle) * 100)}%.` : "Any stone switches this effect on for the whole mix.", val: st ? Math.round(fxAmount(st.angle) * 100) + "%" : "" };
+      case "key": { const k = keyInfo(); return { role: "Center · key", title: `${NN[(ROOT + k.root) % 12]} ${MODES[k.mode].name}`,
+        body: st ? `${stn.name} sets the mode. Twist sets the root note (12 notches).` : "Empty: D minor pentatonic. A stone's type picks the mode; twist picks the root.", val: st ? NN[(ROOT + k.root) % 12] : "" }; }
+      case "gate": return { role: `Gate · ${w.gate}`, title: st ? (activeGate() === i ? `${cap(w.gate)} section playing` : `${cap(w.gate)} (waiting)`) : `${cap(w.gate)} gate`,
+        body: st ? `The last gate stone placed sets the section. Twist nudges tempo: ${fmtBpm(gateBpm(st.angle))}.` : `Place any stone to switch to the ${w.gate} section.`, val: st ? fmtBpm(gateBpm(st.angle), true) : "" };
+    }
+  }
+  const cap = s => s[0].toUpperCase() + s.slice(1);
+  const fmtSemi = (n, short) => short ? (n > 0 ? "+" + n : n === 0 ? "0" : "−" + -n) : (n === 0 ? "untuned" : `${n > 0 ? "+" : "−"}${Math.abs(n)} semitone${Math.abs(n) === 1 ? "" : "s"}`);
+  const fmtBpm = (n, short) => short ? (n > 0 ? "+" + n : n === 0 ? "±0" : "−" + -n) : `${n >= 0 ? "+" : "−"}${Math.abs(n)} BPM`;
+
+  // ================= drawing =================
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) { const v = attrs[k]; if (typeof v === "string" && v.startsWith("var(")) e.style.setProperty(k, v); else e.setAttribute(k, v); } if (parent) parent.appendChild(e); return e; };
+  const LOOK = {
+    basalt: { stops: ["#5a5d5f", "#2c2e30", "#151617"], rx: 1, ry: .88 },
+    slate: { stops: ["#8a96a2", "#56616c", "#333b43"], rx: 1.12, ry: .72 },
+    quartz: { stops: ["#ffffff", "#e9e5dc", "#bdb6a8"], rx: .92, ry: .9 },
+    river: { stops: ["#c2aa8d", "#8b745c", "#5a4a3b"], rx: 1.02, ry: .86 },
+    twin: { stops: ["#a6aca1", "#757b72", "#4a4f48"], rx: 1, ry: .86 },
+  };
+  function defsInto(svg) {
+    const d = el("defs", {}, svg);
+    for (const t of TYPES) {
+      const g = el("radialGradient", { id: "g-" + t, cx: "36%", cy: "30%", r: "78%" }, d);
+      LOOK[t].stops.forEach((c, i) => el("stop", { offset: ["0%", "55%", "100%"][i], "stop-color": c }, g));
+    }
+    const glow = el("filter", { id: "blur", x: "-50%", y: "-50%", width: "200%", height: "200%" }, d);
+    el("feGaussianBlur", { stdDeviation: 6 }, glow);
+  }
+  function stoneShape(parent, x, y, t, r, angle) {
+    const L = LOOK[t], g = el("g", { transform: `translate(${x} ${y}) rotate(${angle})` }, parent);
+    const rx = r * L.rx, ry = r * L.ry;
+    if (t === "twin") {
+      el("ellipse", { cx: -r * .32, cy: 2, rx: r * .62, ry: r * .6, fill: "#000", opacity: .25 }, g);
+      el("ellipse", { cx: r * .32, cy: 2, rx: r * .62, ry: r * .6, fill: "#000", opacity: .25 }, g);
+      el("ellipse", { cx: -r * .32, cy: 0, rx: r * .62, ry: r * .6, fill: "url(#g-twin)" }, g);
+      el("ellipse", { cx: r * .32, cy: 0, rx: r * .62, ry: r * .6, fill: "url(#g-twin)" }, g);
+    } else {
+      el("ellipse", { cx: 0, cy: 2, rx, ry, fill: "#000", opacity: .25 }, g);
+      el("ellipse", { cx: 0, cy: 0, rx, ry, fill: `url(#g-${t})`, stroke: t === "quartz" ? "#a39b8c" : "none", "stroke-width": 1 }, g);
+    }
+    // the off-centre magnet = the heading mark the 3D sensor reads
+    el("line", { x1: 0, y1: 0, x2: 0, y2: -ry * .82, stroke: t === "quartz" ? "#6b5f4e" : "#f3e9d6", "stroke-width": 1.6, "stroke-linecap": "round", opacity: .8 }, g);
+    el("circle", { cx: 0, cy: -ry * .55, r: Math.max(3, r * .16), fill: "#e8662e", stroke: "#2a1a10", "stroke-width": 1 }, g);
+    return g;
+  }
+
+  const svg = document.getElementById("board");
+  defsInto(svg);
+  el("rect", { x: 2, y: 2, width: 816, height: 816, rx: 8, fill: "var(--birch)", stroke: "var(--birch-edge)", "stroke-width": 3 }, svg);
+  const E = { fill: "none", stroke: "var(--burn)", "stroke-width": 1.2, opacity: .85 };
+  // bhupura: square walls broken by the four gates
+  for (const off of [18, 28]) {
+    const a = off, b = 820 - off, gap = 46;
+    const segs = [[a, a, CX - gap, a], [CX + gap, a, b, a], [b, a, b, CY - gap], [b, CY + gap, b, b], [b, b, CX + gap, b], [CX - gap, b, a, b], [a, b, a, CY + gap], [a, CY - gap, a, a]];
+    segs.forEach(([x1, y1, x2, y2]) => el("line", { x1, y1, x2, y2, ...E }, svg));
+  }
+  el("circle", { cx: CX, cy: CY, r: 330, ...E }, svg);
+  el("circle", { cx: CX, cy: CY, r: 324, ...E }, svg);
+  const petals = (n, r1, r2, off) => {
+    let d = "";
+    for (let k = 0; k < n; k++) {
+      const a = off + 360 * k / n, w = 180 / n;
+      const p1 = polar(r1, a - w), tip = polar(r2, a), p2 = polar(r1, a + w), c1 = polar(r2 * 0.98, a - w * 0.55), c2 = polar(r2 * 0.98, a + w * 0.55);
+      d += `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} Q${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${tip[0].toFixed(1)} ${tip[1].toFixed(1)} Q${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+    }
+    return d;
+  };
+  const lotus16 = petals(16, 248, 322, 0), lotus8 = petals(8, 158, 240, 22.5);
+  // light layer under the engraving (the LEDs in the glow channels)
+  // LED strips in the glow channels: one per petal so each can light on its own
+  const glowG = el("g", {}, svg);
+  const petalOne = (n, r1, r2, a) => {
+    const w = 180 / n, f = p => p[0].toFixed(1) + " " + p[1].toFixed(1);
+    return `M${f(polar(r1, a - w))} Q${f(polar(r2 * .98, a - w * .55))} ${f(polar(r2, a))} Q${f(polar(r2 * .98, a + w * .55))} ${f(polar(r1, a + w))}`;
+  };
+  const glow16 = Array.from({ length: 16 }, (_, k) => el("path", { d: petalOne(16, 248, 322, k * 22.5), fill: "none", stroke: "#ffb547", "stroke-width": 7, filter: "url(#blur)", opacity: .3 }, glowG));
+  const glow8 = Array.from({ length: 8 }, (_, k) => el("path", { d: petalOne(8, 158, 240, 22.5 + k * 45), fill: "none", stroke: "#ffb547", "stroke-width": 7, filter: "url(#blur)", opacity: .3 }, glowG));
+  const sparkG = el("g", {}, glowG);
+  el("path", { d: lotus16, ...E }, svg);
+  el("circle", { cx: CX, cy: CY, r: 248, ...E }, svg);
+  el("path", { d: lotus8, ...E }, svg);
+  el("circle", { cx: CX, cy: CY, r: 158, ...E }, svg);
+  const tri = off => [0, 120, 240].map(a => polar(130, a + off).map(v => v.toFixed(1)).join(",")).join(" ");
+  const starLines = [el("polygon", { points: tri(0), ...E }, svg), el("polygon", { points: tri(60), ...E }, svg)];
+  el("circle", { cx: CX, cy: CY, r: 48, ...E }, svg);
+  el("polygon", { points: `${CX},${CY - 333} ${CX - 6},${CY - 343} ${CX + 6},${CY - 343}`, ...E, fill: "var(--burn)" }, svg);
+
+  const playhead = el("line", { class: "playhead", x1: CX, y1: CY, x2: CX, y2: CY - 320, stroke: "#ffcf7a", "stroke-width": 3, opacity: 0, "stroke-linecap": "round" }, svg);
+  const starGlow = el("g", {}, svg);
+
+  // engraved labels
+  WELLS.forEach(w => {
+    if (w.role === "fx") { const p = polar(86, w.deg); const t = el("text", { x: p[0], y: p[1] + 4, class: "engr", style: "font-size:9.5px" }, svg); t.textContent = w.fx.toUpperCase(); }
+    if (w.role === "gate") {
+      const [x, y] = w.p; const horiz = w.deg % 180 === 0;
+      const t = horiz ? el("text", { x: x + 82, y: y + 4, class: "engr" }, svg)
+        : el("text", { x: w.deg === 90 ? 806 : 14, y: y + 68, class: "engr", style: `text-anchor:${w.deg === 90 ? "end" : "start"}` }, svg);
+      t.textContent = w.gate.toUpperCase();
+    }
+  });
+  const kl = el("text", { x: CX, y: CY + 64, class: "engr", style: "font-size:9.5px" }, svg); kl.textContent = "KEY";
+
+  const wellEls = WELLS.map((w, i) => {
+    const [x, y] = w.p;
+    const g = el("g", { class: "well", "data-well": i, tabindex: 0, role: "button" }, svg);
+    el("circle", { cx: x, cy: y, r: w.r, fill: "var(--floor)" }, g);
+    el("circle", { cx: x, cy: y, r: w.r - 4, fill: "none", stroke: "var(--burn)", "stroke-width": .8, opacity: .55 }, g);
+    el("circle", { cx: x, cy: y, r: 1.4, fill: "var(--burn)" }, g);
+    el("circle", { class: "rim", cx: x, cy: y, r: w.r, fill: "none", stroke: "#a98652", "stroke-width": 2 }, g);
+    const stone = el("g", {}, g);
+    // value label: outward from the centre for star points, above the key, below everything else
+    const vp = w.role === "fx" ? polar(130 + w.r + 12, w.deg) : null;
+    const val = el("text", w.role === "fx" ? { x: vp[0], y: vp[1] + 4, class: "val" }
+      : { x, y: w.role === "key" ? y - w.r - 7 : y + w.r + 14, class: "val" }, svg);
+    return { g, stone, val };
+  });
+
+  function renderWell(i) {
+    const w = WELLS[i], st = state[i], we = wellEls[i];
+    we.stone.replaceChildren();
+    if (st) stoneShape(we.stone, w.p[0], w.p[1], st.type, w.r - 5, st.angle);
+    const d = describe(i);
+    we.val.textContent = d.val;
+    we.g.setAttribute("aria-label", d.role + ", " + d.title);
+    we.g.classList.toggle("sel", i === selWell);
+  }
+  function renderAll() {
+    WELLS.forEach((_, i) => renderWell(i));
+    // star lines light up for effects that are on
+    starGlow.replaceChildren();
+    WELLS.forEach((w, i) => {
+      if (w.role !== "fx" || !state[i]) return;
+      const [x, y] = w.p;
+      el("circle", { cx: x, cy: y, r: w.r + 9, fill: "none", stroke: palette(), "stroke-width": 5, opacity: .25 + .6 * fxAmount(state[i].angle), filter: "url(#blur)" }, starGlow);
+    });
+    renderInspector(); renderStatus(); updateFx();
+  }
+
+  // ================= status, palette =================
+  const PAL = { none: "#ffb547", intro: "#5fd3c6", build: "#a98bff", drop: "#ff5a36", breakdown: "#5aa7ff" };
+  const palette = () => PAL[section() || "none"];
+  const statusEl = document.getElementById("status");
+  function renderStatus() {
+    const k = keyInfo();
+    const on = FX.filter(f => fxOn(f) > 0);
+    statusEl.innerHTML = `<span class="chip">Section <b>${section() || "free play"}</b></span>
+      <span class="chip">Key <b>${NN[(ROOT + k.root) % 12]} ${MODES[k.mode].name}</b></span>
+      <span class="chip">Tempo <b>${bpm()} BPM</b></span>
+      <span class="chip">FX <b>${on.length ? on.join(", ") : "none"}</b></span>
+      <span class="chip">Stones <b>${state.filter(Boolean).length}/35</b></span>`;
+    emitDiffs();
+  }
+
+  // ================= inspector + dial =================
+  const iRole = document.getElementById("iRole"), iTitle = document.getElementById("iTitle"), iBody = document.getElementById("iBody");
+  const dial = document.getElementById("dial");
+  defsInto(dial);
+  const ccw = document.getElementById("ccw"), cw = document.getElementById("cw"), rem = document.getElementById("remove");
+  function renderInspector() {
+    dial.querySelectorAll(":scope > g, :scope > circle, :scope > line, :scope > text").forEach(n => n.remove());
+    if (selWell === null) {
+      iRole.textContent = "Nothing selected"; iTitle.textContent = "Select a stone";
+      iBody.textContent = "Tap a stone on the panel to see what it does and turn it.";
+      [ccw, cw, rem].forEach(b => b.disabled = true);
+      el("circle", { cx: 0, cy: 0, r: 60, fill: "none", stroke: "var(--line)", "stroke-width": 2, "stroke-dasharray": "3 5" }, dial);
+      return;
+    }
+    const d = describe(selWell), st = state[selWell], w = WELLS[selWell];
+    iRole.textContent = d.role; iTitle.textContent = d.title; iBody.textContent = d.body;
+    [ccw, cw, rem].forEach(b => b.disabled = !st);
+    el("circle", { cx: 0, cy: 0, r: 62, fill: "var(--floor)", stroke: "var(--birch-edge)", "stroke-width": 2 }, dial);
+    const n = 360 / NOTCH[w.role];
+    for (let k = 0; k < n; k++) {
+      const a = k * NOTCH[w.role] * Math.PI / 180;
+      el("line", { x1: 56 * Math.sin(a), y1: -56 * Math.cos(a), x2: 61 * Math.sin(a), y2: -61 * Math.cos(a), stroke: "var(--burn)", "stroke-width": k === 0 ? 2.5 : 1 }, dial);
+    }
+    if (st) stoneShape(dial, 0, 0, st.type, 46, st.angle);
+    else { const t = el("text", { x: 0, y: 5, class: "engr", style: "font-size:12px" }, dial); t.textContent = "empty"; }
+  }
+  function turn(i, delta) {
+    if (i === null || !state[i]) return;
+    state[i].angle = ((state[i].angle + delta) % 360 + 360) % 360;
+    renderWell(i); renderInspector(); renderStatus(); updateFx(); refreshDependents(i);
+    previewTwist(i);
+  }
+  function snapTo(i, deg) {
+    const n = NOTCH[WELLS[i].role];
+    const a = ((Math.round(deg / n) * n) % 360 + 360) % 360;
+    if (state[i] && state[i].angle !== a) turn(i, a - state[i].angle);
+  }
+  function refreshDependents(i) {
+    // key and gate stones change other labels (melody notes, tempo, section)
+    if (WELLS[i].role === "key" || WELLS[i].role === "gate") renderAll();
+    if (WELLS[i].role === "fx") renderAll();
+  }
+  ccw.addEventListener("click", () => turn(selWell, -NOTCH[WELLS[selWell].role]));
+  cw.addEventListener("click", () => turn(selWell, NOTCH[WELLS[selWell].role]));
+  rem.addEventListener("click", () => { if (selWell !== null) { state[selWell] = null; renderAll(); } });
+  let dialDrag = false;
+  const dialAngle = e => { const r = dial.getBoundingClientRect(); return Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180 / Math.PI; };
+  dial.addEventListener("pointerdown", e => { if (selWell === null || !state[selWell]) return; dialDrag = true; dial.setPointerCapture(e.pointerId); snapTo(selWell, dialAngle(e)); });
+  dial.addEventListener("pointermove", e => { if (dialDrag) snapTo(selWell, dialAngle(e)); });
+  dial.addEventListener("pointerup", () => dialDrag = false);
+  dial.addEventListener("pointercancel", () => dialDrag = false);
+
+  // ================= tray =================
+  const tray = document.getElementById("tray");
+  TYPES.forEach(t => {
+    const b = document.createElement("div");
+    b.className = "tray-stone"; b.dataset.type = t; b.tabIndex = 0; b.setAttribute("role", "button");
+    const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "-22 -19 44 38"); defsInto(s); stoneShape(s, 0, 0, t, 17, 0);
+    const nm = document.createElement("span"); nm.className = "name"; nm.textContent = STONES[t].name;
+    const rl = document.createElement("span"); rl.className = "role"; rl.textContent = `${STONES[t].drum} · ${STONES[t].mel}`;
+    b.append(s, nm, rl); tray.appendChild(b);
+  });
+  const renderTray = () => tray.querySelectorAll(".tray-stone").forEach(b => b.setAttribute("aria-pressed", b.dataset.type === selType));
+
+  // ================= placing, moving, selecting =================
+  function place(i, type, angle) {
+    state[i] = { type, angle: angle ?? DEFAULT_ANGLE[WELLS[i].role] };
+    if (WELLS[i].role === "gate") { gateOrder = gateOrder.filter(g => g !== i); gateOrder.push(i); }
+    selWell = i; renderAll(); previewPlace(i);
+  }
+  let press = null, ghost = null;
+  const wellAt = (x, y) => { const e = document.elementFromPoint(x, y); const w = e && e.closest && e.closest("[data-well]"); return w ? +w.dataset.well : null; };
+  document.addEventListener("pointerdown", e => {
+    const ts = e.target.closest(".tray-stone"), wl = e.target.closest("#board [data-well]");
+    if (!ts && !wl) return;
+    e.preventDefault();
+    const from = wl ? +wl.dataset.well : null;
+    press = { x: e.clientX, y: e.clientY, id: e.pointerId, from, tray: !!ts, type: ts ? ts.dataset.type : state[from]?.type, angle: wl ? state[from]?.angle : undefined, moved: false };
+  });
+  document.addEventListener("pointermove", e => {
+    if (!press || e.pointerId !== press.id) return;
+    if (!press.moved && press.type && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 7) {
+      press.moved = true;
+      ghost = document.createElementNS(NS, "svg"); ghost.setAttribute("viewBox", "-22 -19 44 38"); ghost.setAttribute("class", "ghost");
+      defsInto(ghost); stoneShape(ghost, 0, 0, press.type, 17, press.angle || 0); document.body.appendChild(ghost);
+      if (press.from !== null) { state[press.from] = null; renderAll(); }
+    }
+    if (ghost) ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  });
+  document.addEventListener("pointerup", e => {
+    if (!press || e.pointerId !== press.id) return;
+    const p = press; press = null;
+    if (ghost) { ghost.remove(); ghost = null; }
+    if (p.moved) {
+      const t = wellAt(e.clientX, e.clientY);
+      if (t !== null) {
+        const keep = p.from !== null && WELLS[p.from].role === WELLS[t].role ? p.angle : undefined;
+        place(t, p.type, keep);
+      } else { if (selWell === p.from) selWell = null; renderAll(); }
+      return;
+    }
+    if (p.tray) { selType = p.type; renderTray(); return; }
+    if (state[p.from]) { selWell = p.from; renderAll(); } else place(p.from, selType);
+  });
+  document.addEventListener("pointercancel", () => { press = null; if (ghost) { ghost.remove(); ghost = null; } renderAll(); });
+  svg.addEventListener("wheel", e => {
+    const t = e.target.closest("[data-well]"); if (!t) return;
+    const i = +t.dataset.well; if (!state[i]) return;
+    e.preventDefault(); selWell = i;
+    turn(i, Math.sign(e.deltaY) * NOTCH[WELLS[i].role]); renderAll();
+  }, { passive: false });
+  document.addEventListener("keydown", e => {
+    const wl = e.target.closest && e.target.closest("#board [data-well]");
+    const ts = e.target.closest && e.target.closest(".tray-stone");
+    if (ts && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); selType = ts.dataset.type; renderTray(); return; }
+    if (wl && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const i = +wl.dataset.well; if (state[i]) { selWell = i; renderAll(); } else place(i, selType); return; }
+    if (selWell === null) return;
+    if (e.key === "]") turn(selWell, NOTCH[WELLS[selWell].role]);
+    if (e.key === "[") turn(selWell, -NOTCH[WELLS[selWell].role]);
+    if ((e.key === "Delete" || e.key === "Backspace") && wl) { state[selWell] = null; renderAll(); }
+  });
+
+  // ================= audio engine =================
+  let ctx = null, A = {};
+  function audio() {
+    if (ctx) return ctx;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const g = (v = 1) => { const n = ctx.createGain(); n.gain.value = v; return n; };
+    A.in = g(.9);
+    A.filter = ctx.createBiquadFilter(); A.filter.type = "lowpass"; A.filter.frequency.value = 20000; A.filter.Q.value = 5;
+    A.dry = g(1); A.shaper = ctx.createWaveShaper(); A.wet = g(0);
+    A.stutter = g(1);
+    A.out = g(1);
+    A.delay = ctx.createDelay(2); A.fb = g(.4); A.dSend = g(0);
+    A.verb = ctx.createConvolver(); A.vSend = g(0);
+    A.master = g(.85); A.comp = ctx.createDynamicsCompressor();
+    A.in.connect(A.filter); A.filter.connect(A.dry); A.filter.connect(A.shaper); A.shaper.connect(A.wet);
+    A.dry.connect(A.stutter); A.wet.connect(A.stutter);
+    A.stutter.connect(A.out); A.out.connect(A.master);
+    A.stutter.connect(A.dSend); A.dSend.connect(A.delay); A.delay.connect(A.fb); A.fb.connect(A.delay); A.delay.connect(A.master);
+    A.stutter.connect(A.vSend); A.vSend.connect(A.verb); A.verb.connect(A.master);
+    A.master.connect(A.comp); A.comp.connect(ctx.destination);
+    A.an = ctx.createAnalyser(); A.an.fftSize = 1024; A.an.smoothingTimeConstant = .75; A.comp.connect(A.an);
+    // reverb impulse
+    const len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+    A.verb.buffer = ir;
+    A.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const nd = A.noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    updateFx();
+    return ctx;
+  }
+  function updateFx() {
+    if (!ctx) return;
+    const t = ctx.currentTime, sec = section();
+    const f = fxOn("filter"), dist = fxOn("distortion"), dl = fxOn("delay"), rv = fxOn("reverb");
+    const cutoff = f > 0 ? 8000 * Math.pow(250 / 8000, f) : (sec === "build" ? 2500 : 20000);
+    A.filter.frequency.setTargetAtTime(cutoff, t, .05);
+    const k = 5 + dist * 120, n = 1024, curve = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; curve[i] = (1 + k) * x / (1 + k * Math.abs(x)); }
+    A.shaper.curve = curve;
+    A.wet.gain.setTargetAtTime(dist > 0 ? .25 + dist * .5 : 0, t, .05);
+    A.dry.gain.setTargetAtTime(dist > 0 ? 1 - dist * .6 : 1, t, .05);
+    A.delay.delayTime.setTargetAtTime(3 * stepLen(), t, .05);
+    A.fb.gain.setTargetAtTime(.3 + dl * .45, t, .05);
+    A.dSend.gain.setTargetAtTime(dl > 0 ? .15 + dl * .55 : 0, t, .05);
+    A.vSend.gain.setTargetAtTime((rv > 0 ? .15 + rv * .8 : 0) + (sec === "breakdown" ? .45 : 0), t, .1);
+  }
+  const semis = n => Math.pow(2, n / 12);
+  const hz = m => 440 * semis(m - 69);
+  function envG(t, peak, a, d, dest = A.in) { const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); g.connect(dest); return g; }
+  function noiseHit(t, type, freq, q, peak, decay, offsets = [0]) {
+    const s = ctx.createBufferSource(); s.buffer = A.noise;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = Math.min(16000, freq); f.Q.value = q;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    offsets.forEach((o, k) => { g.gain.setValueAtTime(peak, t + o); g.gain.exponentialRampToValueAtTime(0.0001, t + o + (k === offsets.length - 1 ? decay : .01)); });
+    s.connect(f); f.connect(g); g.connect(A.in); s.start(t, Math.random() * .5); s.stop(t + decay + .1);
+  }
+  const DRUM = {
+    kick(t, f, v) { const o = ctx.createOscillator(); o.frequency.setValueAtTime(160 * f, t); o.frequency.exponentialRampToValueAtTime(48 * f, t + .08); o.connect(envG(t, v, .002, .32)); o.start(t); o.stop(t + .36); },
+    snare(t, f, v) { noiseHit(t, "bandpass", 1800 * f, .8, .7 * v, .15); const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = 185 * f; o.connect(envG(t, .35 * v, .002, .08)); o.start(t); o.stop(t + .12); },
+    hat(t, f, v) { noiseHit(t, "highpass", 7000 * f, .7, .32 * v, .045 / Math.max(.6, f)); },
+    tom(t, f, v) { const o = ctx.createOscillator(); o.frequency.setValueAtTime(190 * f, t); o.frequency.exponentialRampToValueAtTime(115 * f, t + .22); o.connect(envG(t, .8 * v, .002, .4)); o.start(t); o.stop(t + .45); },
+    clap(t, f, v) { noiseHit(t, "bandpass", 1200 * f, 1.2, .8 * v, .15, [0, .012, .024]); },
+  };
+  const INST = {
+    sub(t, m, len, v) { const o = ctx.createOscillator(); o.frequency.value = hz(m - 12); const g = ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.5 * v, t + .01); g.gain.setTargetAtTime(.0001, t + len * .8, .06); g.connect(A.in); o.connect(g); o.start(t); o.stop(t + len + .4); },
+    pluck(t, m, len, v) { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(m); const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(4200, t); f.frequency.exponentialRampToValueAtTime(380, t + .25); o.connect(f); f.connect(envG(t, .22 * v, .003, .45)); o.start(t); o.stop(t + .5); },
+    bell(t, m, len, v) { const c = ctx.createOscillator(), mo = ctx.createOscillator(), mg = ctx.createGain(); c.frequency.value = hz(m); mo.frequency.value = hz(m) * 3.5; mg.gain.setValueAtTime(hz(m) * 2.2, t); mg.gain.exponentialRampToValueAtTime(1, t + 1); mo.connect(mg); mg.connect(c.frequency); c.connect(envG(t, .22 * v, .002, 1.3)); c.start(t); mo.start(t); c.stop(t + 1.4); mo.stop(t + 1.4); },
+    bass(t, m, len, v) { const o = ctx.createOscillator(); o.type = "square"; o.frequency.value = hz(m - 12); const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900; o.connect(f); f.connect(envG(t, .25 * v, .004, Math.max(.2, len))); o.start(t); o.stop(t + len + .3); },
+    choir(t, m, len, v) {
+      const g = ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.13 * v, t + .12); g.gain.setTargetAtTime(.0001, t + len, .2); g.connect(A.in);
+      const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 950; f.Q.value = 1.3; f.connect(g);
+      [-8, 0, 8].forEach(cents => { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(m); o.detune.value = cents; o.connect(f); o.start(t); o.stop(t + len + 1); });
+    },
+  };
+  function playMelody(t, st, len, v = 1) {
+    const inst = STONES[st.type].mel, m = melNote(st);
+    INST[inst](t, m, len, v);
+    const oct = fxOn("octave"); if (oct > 0) INST[inst](t, m + 12, len, v * (.25 + oct * .75));
+  }
+
+  // ================= sequencer =================
+  const bpmIn = document.getElementById("bpm"), bpmOut = document.getElementById("bpmv");
+  const stepLen = () => 60 / bpm() / 4;
+  bpmIn.addEventListener("input", () => { bpmOut.textContent = bpmIn.value; renderStatus(); updateFx(); });
+  let playing = false, step = 0, bar = 0, nextT = 0, timer = null, queue = [];
+  function scheduleStep(s, t) {
+    const sec = section(), hits = [], ev = [];
+    const mute = { intro: ["kick", "snare", "clap"], breakdown: ["kick", "snare", "clap", "tom"] }[sec] || [];
+    WELLS.forEach((w, i) => {
+      const st = state[i]; if (!st) return;
+      if (w.role === "drum" && w.step === s) {
+        const d = STONES[st.type].drum;
+        if (mute.includes(d)) return;
+        DRUM[d](t, semis(drumTune(st.angle)), sec === "breakdown" && d === "hat" ? .5 : 1);
+        hits.push(i); ev.push(["drum", d, drumTune(st.angle), i, w.step]);
+        if (sec === "drop" && d === "kick") INST.sub(t, ROOT - 12 + keyInfo().root + 12, stepLen() * 3, .9);
+      }
+      if (w.role === "melody" && w.step === s) { playMelody(t, st, stepLen() * 1.8); hits.push(i); ev.push(["note", STONES[st.type].mel, melNote(st), i, w.k]); }
+    });
+    // build: noise riser across each bar
+    if (sec === "build" && s === 0) {
+      const src = ctx.createBufferSource(); src.buffer = A.noise; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 3; const L = stepLen() * 16;
+      f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(7000, t + L);
+      const g = ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + L * .95); g.gain.linearRampToValueAtTime(0, t + L);
+      src.connect(f); f.connect(g); g.connect(A.in); src.start(t); src.stop(t + L);
+    }
+    // stutter chops this step
+    const stu = fxOn("stutter"), L = stepLen();
+    A.stutter.gain.cancelScheduledValues(t); A.stutter.gain.setValueAtTime(1, t);
+    if (stu > 0) {
+      const n = 2 + Math.round(stu * 6), d = L / n;
+      for (let k = 0; k < n; k++) { A.stutter.gain.setValueAtTime(1, t + k * d); A.stutter.gain.setValueAtTime(.0001, t + k * d + d * .55); }
+      A.stutter.gain.setValueAtTime(1, t + L - .001);
+    }
+    queue.push({ t, s, hits, ev });
+  }
+  function tick() {
+    while (nextT < ctx.currentTime + .12) {
+      scheduleStep(step, nextT);
+      nextT += stepLen(); step = (step + 1) % 16; if (step === 0) bar++;
+    }
+  }
+  // ================= show: lights, lasers, display, cues =================
+  const boardWrap = document.getElementById("boardWrap");
+  const tNight = document.getElementById("tNight"), tLights = document.getElementById("tLights"), tLasers = document.getElementById("tLasers"), tDisplay = document.getElementById("tDisplay");
+  tNight.addEventListener("change", () => boardWrap.classList.toggle("night", tNight.checked));
+  tLights.addEventListener("change", () => { glowG.style.display = tLights.checked ? "" : "none"; });
+  tDisplay.addEventListener("change", () => { document.getElementById("screenWrap").hidden = !tDisplay.checked; });
+
+  // three colours per section; kicks step the palette, snares and claps rotate it around the petals
+  const PALS = {
+    none: ["#ffb547", "#ff7a3d", "#ffe29a"], intro: ["#5fd3c6", "#3aa7c9", "#b6f2e6"], build: ["#a98bff", "#6f6cff", "#e3a8ff"],
+    drop: ["#ff5a36", "#ff2d6f", "#ffb547"], breakdown: ["#5aa7ff", "#3b6dff", "#a8d6ff"],
+  };
+  const LT = { pal: 0, rot: 0, lastPal: -1, kick: 0, p16: new Float32Array(16), p8: new Float32Array(8), sparks: [], figure: -1, visBar: -1, lastStep: 0, lastStepT: 0 };
+  const pcol = k => { const P = PALS[section() || "none"]; return P[((k + LT.rot + LT.pal) % 3 + 3) % 3]; };
+  const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${clamp(a, 0, 1).toFixed(3)})`; };
+
+  // ---- cue monitor (same OSC addresses as the hub) ----
+  const cuesEl = document.getElementById("cues"), cues = [];
+  let cuesDirty = false, prevShow = null;
+  function emit(addr, ...args) { cues.unshift([addr, args.join("  ")]); if (cues.length > 9) cues.length = 9; cuesDirty = true; }
+  function renderCues() {
+    if (!cuesDirty) return; cuesDirty = false;
+    cuesEl.replaceChildren(...cues.map(([a, g]) => {
+      const li = document.createElement("li"), s1 = document.createElement("span"), s2 = document.createElement("span");
+      s1.className = "addr"; s1.textContent = a; s2.className = "args"; s2.textContent = g; li.append(s1, s2); return li;
+    }));
+  }
+  function emitDiffs() {
+    const k = keyInfo();
+    const cur = { sec: section() || "none", key: k.mode + (ROOT + k.root), fx: FX.map(f => fxOn(f)) };
+    if (prevShow) {
+      if (cur.sec !== prevShow.sec) { emit("/section", cur.sec); emit("/light/section", cur.sec); }
+      if (cur.key !== prevShow.key) emit("/key", k.mode, ROOT + k.root);
+      FX.forEach((f, i) => {
+        const a = cur.fx[i], b = prevShow.fx[i];
+        if ((a > 0) !== (b > 0)) { emit("/fx/on", f, a > 0 ? 1 : 0); emit("/light/star", f, a > 0 ? 1 : 0); }
+        else if (a > 0 && a !== b) emit("/fx/amount", f, a.toFixed(2));
+      });
+    }
+    prevShow = cur;
+  }
+
+  // ---- step arrives (at the moment it is heard) ----
+  const flashUntil = new Map();
+  function onStep(q, now) {
+    LT.lastStep = q.s; LT.lastStepT = q.t;
+    if (q.s === 0) {
+      LT.visBar++; emit("/bar", LT.visBar);
+      const fig = Math.floor(LT.visBar / 4) % 3;
+      if (fig !== LT.figure) { LT.figure = fig; emit("/laser/figure", ["triangle", "hexagram", "lotus"][fig]); }
+    }
+    q.hits.forEach(i => { flashUntil.set(i, now + .12); dispHit(i, now); });
+    q.ev.forEach(e => {
+      if (e[0] === "drum") {
+        const [, d, tune, i, s] = e;
+        emit("/drum", d, tune, i + 1);
+        LT.p16[s] = 1;
+        if (d === "kick") {
+          LT.kick = 1; emit("/laser/pulse", 1);
+          if (now - LT.lastPal >= .333) { LT.pal++; LT.lastPal = now; emit("/light/palette", LT.pal % 6); }   // ≤ 3 flashes per second
+        }
+        if (d === "snare" || d === "clap") { LT.rot++; emit("/light/rotate", (LT.rot * 22.5) % 360); }
+        if (d === "hat") { LT.sparks.push({ x: WELLS[i].p[0], y: WELLS[i].p[1], life: 1 }); emit("/light/sparkle", 1); }
+      } else {
+        const [, inst, midi, i, k] = e;
+        emit("/note", inst, midi, i + 1); LT.p8[k] = 1; emit("/light/petal", 1);
+      }
+    });
+  }
+
+  // ---- LED strips in the panel ----
+  function drawLights() {
+    const base = boardWrap.classList.contains("night") ? .32 : .22;
+    glow16.forEach((p, k) => { p.setAttribute("stroke", pcol(k)); p.setAttribute("opacity", Math.min(1, base + .68 * LT.p16[k] + .2 * LT.kick).toFixed(3)); LT.p16[k] *= .9; });
+    glow8.forEach((p, k) => { p.setAttribute("stroke", pcol(k + 1)); p.setAttribute("opacity", Math.min(1, base + .68 * LT.p8[k]).toFixed(3)); LT.p8[k] *= .92; });
+    sparkG.replaceChildren();
+    LT.sparks = LT.sparks.filter(s => (s.life *= .86) > .05);
+    LT.sparks.forEach(s => {
+      for (let j = 0; j < 5; j++) {
+        const a = (j * 72 + s.life * 90) * Math.PI / 180, r = 18 + (1 - s.life) * 22;
+        el("circle", { cx: s.x + r * Math.sin(a), cy: s.y - r * Math.cos(a), r: 2.2, fill: "#ffffff", opacity: s.life.toFixed(2) }, sparkG);
+      }
+    });
+  }
+
+  // ---- lasers, seen from above through haze ----
+  const lc = document.getElementById("laser"), lx = lc.getContext("2d");
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function fit(c) {
+    const r = c.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  }
+  function beam(a, b, color, alpha, w) {
+    const k = lc.width / 820;
+    lx.strokeStyle = color; lx.lineCap = "round";
+    lx.beginPath(); lx.moveTo(a[0] * k, a[1] * k); lx.lineTo(b[0] * k, b[1] * k);
+    lx.globalAlpha = alpha * .16; lx.lineWidth = w * 7 * k; lx.stroke();
+    lx.globalAlpha = alpha; lx.lineWidth = w * k; lx.stroke();
+  }
+  const loop = (pts, color, alpha, w) => pts.forEach((p, i) => beam(p, pts[(i + 1) % pts.length], color, alpha, w));
+  function drawLasers(now) {
+    fit(lc); lx.clearRect(0, 0, lc.width, lc.height);
+    if (!tLasers.checked || !playing) return;            // lasers blank whenever the hub isn't running
+    lx.globalCompositeOperation = "lighter";
+    const sec = section(), c0 = pcol(0), c1 = pcol(1);
+    const frac = reduceMotion ? 0 : clamp((now - LT.lastStepT) / stepLen(), 0, 1);
+    const ang = (LT.lastStep + frac) * 22.5;
+    const pulse = LT.kick; LT.kick *= .88;
+    if (sec === "breakdown") {                            // slow tunnel instead of a figure
+      for (let j = 0; j < 4; j++) {
+        const f = ((now * .22) + j / 4) % 1, r = 320 * (1 - f);
+        loop(Array.from({ length: 6 }, (_, k) => polar(r, k * 60 + now * 10)), c0, .1 + .35 * (1 - f), 1.2);
+      }
+    } else if (sec !== "intro" && LT.figure >= 0) {       // intro: playhead only
+      const rot = sec === "build" && !reduceMotion ? ((LT.visBar % 4) * 16 + LT.lastStep + frac) * 22.5 / 4 : 0;
+      const a = (sec === "drop" ? .5 : .28) + .6 * pulse;
+      const tri = off => [0, 120, 240].map(d => polar(300, d + off + rot));
+      if (LT.figure === 0) loop(tri(0), c1, a, 1.4);
+      else if (LT.figure === 1) { loop(tri(0), c1, a, 1.4); loop(tri(60), c0, a, 1.4); }
+      else loop(Array.from({ length: 16 }, (_, k) => polar(300, ((k * 5) % 16) * 22.5 + rot)), c1, a * .8, 1.1);
+    }
+    WELLS.forEach((w, i) => { if (w.role === "fx" && state[i]) beam(polar(40, w.deg), polar(330, w.deg), pcol(2), .2 + .55 * fxAmount(state[i].angle), 1.2); });
+    beam([CX, CY], polar(330, ang), c0, .55, 3);
+    beam([CX, CY], polar(330, ang), "#ffffff", .9, 1.4);
+    lx.globalAlpha = 1; lx.globalCompositeOperation = "source-over";
+  }
+
+  // ---- projection / LED wall ----
+  // A VJ-style scene built from the stones themselves: every placed stone is an orb on its ring,
+  // hits flare and ripple, melody notes throw sparks, the mix draws a six-fold bloom in the middle,
+  // and each section and star effect changes how the scene moves.
+  const sc = document.getElementById("screen"), sx = sc.getContext("2d");
+  const screenWrap = document.getElementById("screenWrap");
+  document.getElementById("fs").addEventListener("click", () => {
+    const req = screenWrap.requestFullscreen || screenWrap.webkitRequestFullscreen;
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else if (req) Promise.resolve(req.call(screenWrap)).catch(() => {});
+  });
+  const ORB = { basalt: "#ff6a3d", slate: "#5aa7ff", quartz: "#eef0ff", river: "#ffc46b", twin: "#ff5fd2" };
+  const RING = { drum: .9, melody: .62, fx: .4, key: 0 };
+  const DS = { flare: new Float32Array(WELLS.length), ripples: [], sparks: [], zoom: 0, shock: [], rot: 0, tun: 0, last: 0, trail: [], lastShock: -1 };
+  let fbuf = null, tbuf = null, thPos = null;
+
+  function dispHit(i, now) {
+    const w = WELLS[i], st = state[i]; if (!st) return;
+    DS.flare[i] = 1;
+    const col = ORB[st.type];
+    if (w.role === "drum") {
+      const d = STONES[st.type].drum;
+      DS.ripples.push({ i, life: 1, col, big: d === "kick" || d === "tom" });
+      if (d === "kick") {
+        DS.zoom = 1;
+        if (section() === "drop" && now - DS.lastShock > .33) { DS.shock.push({ life: 1, col: pcol(0) }); DS.lastShock = now; }
+      }
+    } else if (w.role === "melody") {
+      for (let k = 0; k < 10; k++) DS.sparks.push({ i, a: Math.random() * Math.PI * 2, v: .25 + Math.random() * .55, life: 1, col });
+    }
+  }
+
+  function drawDisplay(now) {
+    if (!tDisplay.checked) return;
+    fit(sc);
+    const W = sc.width, H = sc.height, cx = W / 2, cy = H / 2, R = Math.min(W, H) * .44;
+    const pnow = performance.now() / 1000, dt = Math.min(.05, Math.max(0, pnow - (DS.last || pnow))) || 1 / 60; DS.last = pnow;
+    const live = !!(ctx && A.an && (playing || thActive));
+    const sec = section();
+    const fx = name => fxOn(name);
+    // ---- audio features ----
+    let bass = 0, mid = 0, high = 0, rms = 0;
+    if (live) {
+      if (!fbuf) { fbuf = new Uint8Array(A.an.frequencyBinCount); tbuf = new Uint8Array(A.an.fftSize); }
+      A.an.getByteFrequencyData(fbuf); A.an.getByteTimeDomainData(tbuf);
+      for (let i = 1; i < 8; i++) bass += fbuf[i]; bass /= 7 * 255;
+      for (let i = 8; i < 60; i++) mid += fbuf[i]; mid /= 52 * 255;
+      for (let i = 60; i < 200; i++) high += fbuf[i]; high /= 140 * 255;
+      for (let i = 0; i < tbuf.length; i++) { const v = (tbuf[i] - 128) / 128; rms += v * v; } rms = Math.sqrt(rms / tbuf.length);
+    }
+    const energy = live ? 1 : .35;
+    // ---- motion ----
+    const spin = reduceMotion ? 0 : (playing ? (sec === "build" ? .25 + .2 * ((LT.visBar % 4) / 4) : sec === "breakdown" ? .04 : .09) : .03);
+    DS.rot += dt * spin;
+    DS.tun = (DS.tun + dt * (reduceMotion ? 0 : sec === "build" ? .5 + .4 * ((LT.visBar % 4) / 4) : sec === "breakdown" ? .08 : playing ? .18 : .05)) % 1;
+    DS.zoom *= Math.pow(.02, dt);
+    const scale = 1 + .05 * DS.zoom + (sec === "drop" ? .03 * bass : 0);
+    const pos = (i, extra = 0) => {
+      const w = WELLS[i], r = RING[w.role] * R * scale, a = (w.deg * Math.PI / 180) + DS.rot * (w.role === "melody" ? -1 : 1) + extra;
+      return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+    };
+    const stroke = (path, col, a, w) => { sx.strokeStyle = col; sx.globalAlpha = a * .18; sx.lineWidth = w * 6; sx.stroke(path); sx.globalAlpha = a; sx.lineWidth = w; sx.stroke(path); };
+    const u = Math.max(1, W / 900);
+
+    // ---- background: trails (longer with delay), bloom (bigger with reverb) ----
+    sx.globalCompositeOperation = "source-over"; sx.globalAlpha = 1;
+    sx.fillStyle = `rgba(3,4,9,${(.32 - .22 * fx("delay")).toFixed(3)})`; sx.fillRect(0, 0, W, H);
+    const bloomR = R * (1.5 + fx("reverb") * .9);
+    const g = sx.createRadialGradient(cx, cy, 0, cx, cy, bloomR);
+    g.addColorStop(0, hexA(pcol(0), (.06 + .18 * bass) * energy)); g.addColorStop(.6, hexA(pcol(1), .05 * energy)); g.addColorStop(1, "rgba(0,0,0,0)");
+    sx.fillStyle = g; sx.fillRect(0, 0, W, H);
+
+    sx.globalCompositeOperation = "lighter";
+    // ---- tunnel of receding 16-gons ----
+    for (let j = 0; j < 9; j++) {
+      const f = (DS.tun + j / 9) % 1, r = R * 1.9 * f * f, p = new Path2D();
+      for (let k = 0; k <= 16; k++) { const a = k * Math.PI / 8 + DS.rot * .5; k ? p.lineTo(cx + r * Math.sin(a), cy - r * Math.cos(a)) : p.moveTo(cx + r * Math.sin(a), cy - r * Math.cos(a)); }
+      stroke(p, pcol(j), (.04 + .16 * f) * energy * (sec === "breakdown" ? 1.6 : 1), u);
+    }
+
+    // ---- lotus rings (stutter chops them on the 32nds) ----
+    const stuOn = fx("stutter") > 0 && playing && Math.floor(((now - LT.lastStepT) / stepLen()) * (2 + Math.round(fx("stutter") * 6))) % 2 === 1;
+    const lotus = (n, r1, r2, off, col, a) => {
+      const p = new Path2D(), w = Math.PI / n;
+      for (let k = 0; k < n; k++) {
+        const c = off + k * 2 * w, P = (r, t) => [cx + r * Math.sin(t), cy - r * Math.cos(t)];
+        const [x1, y1] = P(r1, c - w), [tx, ty] = P(r2, c), [x2, y2] = P(r1, c + w), [c1x, c1y] = P(r2 * .97, c - w * .55), [c2x, c2y] = P(r2 * .97, c + w * .55);
+        p.moveTo(x1, y1); p.quadraticCurveTo(c1x, c1y, tx, ty); p.quadraticCurveTo(c2x, c2y, x2, y2);
+      }
+      stroke(p, col, a, u * 1.3);
+    };
+    if (!stuOn) {
+      lotus(16, R * .78 * scale, R * 1.02 * scale, DS.rot, pcol(0), (.25 + .5 * mid) * energy);
+      lotus(8, R * .5 * scale, R * .74 * scale, -DS.rot + Math.PI / 8, pcol(1), (.22 + .5 * mid) * energy);
+      if (fx("octave") > 0) lotus(16, R * 1.05 * scale, R * 1.3 * scale, DS.rot * 2, pcol(2), .2 * fx("octave") + .1);
+    }
+
+    // ---- constellations: lines through the occupied drum and melody wells ----
+    [["drum", .16], ["melody", .2]].forEach(([role, a]) => {
+      const pts = WELLS.map((w, i) => w.role === role && state[i] ? pos(i) : null).filter(Boolean);
+      if (pts.length < 2) return;
+      const p = new Path2D(); pts.forEach(([x, y], k) => k ? p.lineTo(x, y) : p.moveTo(x, y)); p.closePath();
+      stroke(p, role === "drum" ? pcol(0) : pcol(1), a * energy, u);
+    });
+
+    // ---- mix bloom: six-fold mirrored spectrum ----
+    if (live) {
+      const N = 96, p = new Path2D();
+      for (let k = 0; k <= N; k++) {
+        const t = k / N, seg = (t * 12) % 1, m = Math.floor(t * 12) % 2 ? 1 - seg : seg;      // mirror inside each 30° slice
+        const v = fbuf[Math.floor(Math.pow(m, 1.6) * fbuf.length * .45) + 1] / 255;
+        const r = R * (.1 + .3 * v * (1 + bass)), a = t * Math.PI * 2 + DS.rot * .3;
+        const x = cx + r * Math.sin(a), y = cy - r * Math.cos(a); k ? p.lineTo(x, y) : p.moveTo(x, y);
+      }
+      const split = fx("distortion") * 6 * u;                                                       // distortion = RGB split
+      if (split > 0) {
+        sx.save(); sx.translate(-split, 0); stroke(p, "#ff3b3b", .5, u * 1.5); sx.translate(split * 2, 0); stroke(p, "#3bc8ff", .5, u * 1.5); sx.restore();
+      }
+      const fg = sx.createRadialGradient(cx, cy, 0, cx, cy, R * .45);
+      fg.addColorStop(0, hexA(pcol(2), .35)); fg.addColorStop(1, hexA(pcol(1), .02));
+      sx.globalAlpha = .32; sx.fillStyle = fg; sx.fill(p);
+      stroke(p, pcol(1), .9, u * 1.6);
+    }
+
+    // ---- star effects: beams out of the hexagram ----
+    WELLS.forEach((w, i) => {
+      if (w.role !== "fx" || !state[i]) return;
+      const [x, y] = pos(i), amt = fxAmount(state[i].angle), p = new Path2D();
+      p.moveTo(cx, cy); p.lineTo(cx + (x - cx) * 3, cy + (y - cy) * 3);
+      stroke(p, pcol(2), (.12 + .4 * amt) * energy, u * 1.2);
+    });
+    // hexagram
+    const hr = R * .4 * scale * (1 + rms * .8), hp = new Path2D();
+    [0, 60].forEach(off => [0, 120, 240, 360].forEach((d, j) => { const a = (d + off) * Math.PI / 180 + DS.rot; const x = cx + hr * Math.sin(a), y = cy - hr * Math.cos(a); j ? hp.lineTo(x, y) : hp.moveTo(x, y); }));
+    stroke(hp, pcol(1), .55 * energy, u * 1.4);
+
+    // ---- ripples, shockwaves, sparks ----
+    DS.ripples = DS.ripples.filter(r => (r.life -= dt * (r.big ? 1.6 : 2.6)) > 0);
+    DS.ripples.forEach(r => { const [x, y] = pos(r.i), p = new Path2D(); p.arc(x, y, R * (r.big ? .28 : .14) * (1 - r.life) + 2 * u, 0, Math.PI * 2); stroke(p, r.col, r.life * .8, u * 1.5); });
+    DS.shock = DS.shock.filter(s => (s.life -= dt * 1.1) > 0);
+    DS.shock.forEach(s => { const p = new Path2D(); p.arc(cx, cy, R * 1.4 * (1 - s.life) + R * .1, 0, Math.PI * 2); stroke(p, s.col, s.life * .9, u * 6 * s.life + u); });
+    DS.sparks = DS.sparks.filter(s => (s.life -= dt * .9) > 0);
+    DS.sparks.forEach(s => {
+      const [x0, y0] = pos(s.i), d = (1 - s.life) * R * .45 * s.v;
+      const x = x0 + Math.cos(s.a) * d, y = y0 + Math.sin(s.a) * d - (1 - s.life) * R * .12;
+      sx.globalAlpha = s.life; sx.fillStyle = s.col; sx.beginPath(); sx.arc(x, y, u * 2.2 * (.5 + s.life), 0, Math.PI * 2); sx.fill();
+    });
+
+    // ---- orbs: one per placed stone ----
+    WELLS.forEach((w, i) => {
+      const st = state[i]; if (!st || w.role === "gate") return;
+      const [x, y] = w.role === "key" ? [cx, cy] : pos(i);
+      const f = DS.flare[i]; DS.flare[i] *= Math.pow(.004, dt);
+      const r = R * (w.role === "key" ? .07 : .035) * (1 + .7 * f), col = ORB[st.type];
+      const og = sx.createRadialGradient(x, y, 0, x, y, r * 3.2);
+      og.addColorStop(0, hexA(col, .9 * energy + .1)); og.addColorStop(.25, hexA(col, (.35 + .5 * f) * energy)); og.addColorStop(1, hexA(col, 0));
+      sx.globalAlpha = 1; sx.fillStyle = og; sx.beginPath(); sx.arc(x, y, r * 3.2, 0, Math.PI * 2); sx.fill();
+      // the stone's twist, drawn as a short tick
+      const a = st.angle * Math.PI / 180 + (w.role === "key" ? 0 : (w.deg * Math.PI / 180) + DS.rot * (w.role === "melody" ? -1 : 1));
+      const p = new Path2D(); p.moveTo(x + Math.sin(a) * r * .6, y - Math.cos(a) * r * .6); p.lineTo(x + Math.sin(a) * r * 1.7, y - Math.cos(a) * r * 1.7);
+      sx.globalAlpha = .75; sx.strokeStyle = "#ffffff"; sx.lineWidth = u * 1.4; sx.lineCap = "round"; sx.stroke(p);
+    });
+
+    // ---- theremin: a comet that follows the player's hand ----
+    if (thActive && thPos) {
+      const a = (thPos.x * 300 - 150) * Math.PI / 180, r = R * (.5 + .45 * (1 - thPos.y));
+      DS.trail.push([cx + r * Math.sin(a), cy - r * Math.cos(a), 1]);
+    }
+    DS.trail = DS.trail.slice(-60).filter(t => (t[2] -= dt * 1.2) > 0);
+    if (DS.trail.length > 1) {
+      for (let k = 1; k < DS.trail.length; k++) {
+        const [x1, y1] = DS.trail[k - 1], [x2, y2, l] = DS.trail[k], p = new Path2D(); p.moveTo(x1, y1); p.lineTo(x2, y2);
+        stroke(p, "#bff6ff", l * .9, u * (1 + 4 * l));
+      }
+    }
+
+    // ---- filter darkens the edges ----
+    sx.globalCompositeOperation = "source-over";
+    const vf = fx("filter");
+    if (vf > 0) { const vg = sx.createRadialGradient(cx, cy, R * (1.1 - vf * .7), cx, cy, Math.max(W, H) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, `rgba(0,0,0,${(.25 + vf * .6).toFixed(2)})`); sx.globalAlpha = 1; sx.fillStyle = vg; sx.fillRect(0, 0, W, H); }
+
+    // ---- HUD ----
+    sx.globalAlpha = 1;
+    const fs = Math.max(10, Math.round(Math.min(W, H) / 36)), pad = fs * 1.3;
+    sx.font = `500 ${fs}px "IBM Plex Mono", ui-monospace, monospace`; sx.textBaseline = "alphabetic";
+    const tempoText = playing ? `BAR ${Math.max(1, LT.visBar + 1)}  ·  ${bpm()} BPM` : `${bpm()} BPM`;
+    sx.fillStyle = "rgba(255,255,255,.55)"; sx.textAlign = "left";
+    if (sc.clientWidth < 600) sx.fillText(tempoText, pad, pad + fs * .4);          // narrow: leave the top right for the button
+    else { sx.fillText("STONE CIRCLE", pad, pad + fs * .4); sx.textAlign = "center"; sx.fillText(tempoText, cx, pad + fs * .4); }
+    const k = keyInfo();
+    sx.fillStyle = "rgba(255,255,255,.8)";
+    sx.textAlign = "left"; sx.fillText((sec || "free play").toUpperCase(), pad, H - pad);
+    sx.textAlign = "right"; sx.fillText(`${NN[(ROOT + k.root) % 12]} ${MODES[k.mode].name}`.toUpperCase(), W - pad, H - pad);
+    if (!live) { sx.textAlign = "center"; sx.fillStyle = "rgba(255,255,255,.6)"; sx.fillText("PRESS PLAY", cx, H - pad); }
+    sx.textAlign = "left";
+  }
+
+  function frame() {
+    const now = ctx ? ctx.currentTime : 0;
+    if (playing) while (queue.length && queue[0].t <= now) onStep(queue.shift(), now);
+    wellEls.forEach((we, i) => we.g.classList.toggle("hit", playing && (flashUntil.get(i) || 0) > now));
+    const svgHead = playing && !tLasers.checked;
+    playhead.setAttribute("opacity", svgHead ? .75 : 0);
+    if (svgHead) { const [x2, y2] = polar(320, LT.lastStep * 22.5); playhead.setAttribute("x2", x2); playhead.setAttribute("y2", y2); playhead.setAttribute("stroke", pcol(0)); }
+    drawLights(); drawLasers(now); drawDisplay(now); renderCues();
+    requestAnimationFrame(frame);
+  }
+
+  const playBtn = document.getElementById("play");
+  playBtn.addEventListener("click", async () => {
+    audio(); if (ctx.state !== "running") await ctx.resume();
+    playing = !playing; playBtn.textContent = playing ? "Stop" : "Play";
+    if (playing) { step = 0; bar = 0; queue = []; LT.visBar = -1; LT.figure = -1; nextT = ctx.currentTime + .06; updateFx(); tick(); timer = setInterval(tick, 25); emit("/safety/blank", 0); }
+    else { clearInterval(timer); emit("/safety/blank", 1); }
+  });
+
+  function previewPlace(i) {
+    if (!ctx || playing || !state[i]) return;
+    const w = WELLS[i], st = state[i], t = ctx.currentTime + .01;
+    if (w.role === "drum") DRUM[STONES[st.type].drum](t, semis(drumTune(st.angle)), 1);
+    if (w.role === "melody") playMelody(t, st, .4);
+  }
+  const previewTwist = previewPlace;
+
+  // ================= theremin =================
+  const pad = document.getElementById("pad"), hand = document.getElementById("hand"), tRead = document.getElementById("tRead"), snap = document.getElementById("snap");
+  let th = null, thActive = false;
+  function thereminStart() {
+    audio(); if (ctx.state !== "running") ctx.resume();
+    if (th) return;
+    const o = ctx.createOscillator(), o2 = ctx.createOscillator(), vib = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), g2 = ctx.createGain();
+    o.type = "sine"; o2.type = "triangle"; g2.gain.value = .25; vib.frequency.value = 5.4; vg.gain.value = 4;
+    vib.connect(vg); vg.connect(o.frequency); vg.connect(o2.frequency);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.gain.value = 0; g.connect(A.in);
+    o.start(); o2.start(); vib.start();
+    th = { o, o2, g };
+  }
+  function thereminSet(e) {
+    const r = pad.getBoundingClientRect();
+    const x = clamp((e.clientX - r.left) / r.width, 0, 1), y = clamp((e.clientY - r.top) / r.height, 0, 1);
+    hand.hidden = false; hand.style.left = (x * 100) + "%"; hand.style.top = (y * 100) + "%";
+    thPos = { x, y };
+    const pos = x * 10, k = keyInfo();
+    const deg = snap.checked ? Math.round(pos) : pos;
+    const lo = scaleNote(Math.floor(deg), k) + 12, hi = scaleNote(Math.floor(deg) + 1, k) + 12;
+    const m = lo + (hi - lo) * (deg - Math.floor(deg));
+    const amp = Math.pow(1 - y, 1.5) * .35;
+    const t = ctx.currentTime;
+    th.o.frequency.setTargetAtTime(hz(m), t, snap.checked ? .03 : .015);
+    th.o2.frequency.setTargetAtTime(hz(m), t, snap.checked ? .03 : .015);
+    th.g.gain.setTargetAtTime(amp, t, .04);
+    tRead.textContent = `${noteName(Math.round(m))} · volume ${Math.round((1 - y) * 100)}%`;
+  }
+  pad.addEventListener("pointerdown", e => { e.preventDefault(); thereminStart(); thActive = true; emit("/theremin/active", 1); pad.classList.toggle("lit", tLights.checked); pad.setPointerCapture(e.pointerId); thereminSet(e); });
+  pad.addEventListener("pointermove", e => { if (thActive) thereminSet(e); });
+  const thStop = () => { if (!thActive) return; thActive = false; emit("/theremin/active", 0); pad.classList.remove("lit"); hand.hidden = true; tRead.textContent = "Hold here to play"; if (th) th.g.gain.setTargetAtTime(0, ctx.currentTime, .08); };
+  pad.addEventListener("pointerup", thStop); pad.addEventListener("pointercancel", thStop);
+
+  // ================= example =================
+  const at = (role, n) => WELLS.findIndex(w => w.role === role && (role === "drum" ? w.step === n : role === "melody" ? w.k === n : role === "fx" ? w.fx === n : true));
+  function loadExample() {
+    state.fill(null); gateOrder = []; selWell = null;
+    const S = (i, type, angle = 0) => { state[i] = { type, angle }; };
+    [0, 7, 10].forEach(s => S(at("drum", s), "basalt"));
+    [4, 12].forEach(s => S(at("drum", s), "slate"));
+    [2, 6, 14].forEach(s => S(at("drum", s), "quartz", s === 14 ? 48 : 0));
+    S(at("drum", 9), "river", 312); S(at("drum", 15), "twin");
+    [["river", 0], ["quartz", 180], ["quartz", 90], ["slate", 135], ["river", 0], ["quartz", 225], ["quartz", 180], ["slate", 90]].forEach(([t, a], k) => S(at("melody", k), t, a));
+    S(at("fx", "reverb"), "slate", 105); S(at("fx", "delay"), "quartz", 75);
+    S(KEYW, "river", 0);
+    selWell = at("melody", 1);
+    renderAll();
+  }
+  document.getElementById("example").addEventListener("click", loadExample);
+  document.getElementById("clear").addEventListener("click", () => { state.fill(null); gateOrder = []; selWell = null; renderAll(); });
+
+  renderTray(); loadExample(); requestAnimationFrame(frame);
+})();
+</script>
